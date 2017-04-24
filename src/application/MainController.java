@@ -32,6 +32,7 @@ import org.daisy.braille.api.embosser.EmbosserFeatures;
 import org.daisy.braille.api.embosser.EmbosserWriter;
 import org.daisy.braille.consumer.embosser.EmbosserCatalog;
 import org.daisy.braille.consumer.table.TableCatalog;
+import org.daisy.braille.pef.PEFBook;
 import org.daisy.braille.pef.PEFHandler;
 import org.daisy.braille.pef.TextConverterFacade;
 import org.daisy.dotify.consumer.tasks.TaskGroupFactoryMaker;
@@ -41,6 +42,7 @@ import org.w3c.dom.Node;
 
 import application.about.AboutView;
 import application.imports.ImportBrailleView;
+import application.emboss.EmbossView;
 import application.l10n.Messages;
 import application.prefs.PreferencesView;
 import application.preview.PreviewController;
@@ -92,6 +94,7 @@ public class MainController {
 	@FXML private MenuItem saveAsMenuItem;
 	@FXML private MenuItem refreshMenuItem;
 	@FXML private MenuItem openInBrowserMenuItem;
+	@FXML private MenuItem embossMenuItem;
 	private final double dividerPosition = 0.2;
 	private Tab searchTab;
 	private ExecutorService exeService;
@@ -136,6 +139,7 @@ public class MainController {
 		saveAsMenuItem.disableProperty().bind(tabPane.getSelectionModel().selectedItemProperty().isNull());
 		refreshMenuItem.disableProperty().bind(tabPane.getSelectionModel().selectedItemProperty().isNull());
 		openInBrowserMenuItem.disableProperty().bind(tabPane.getSelectionModel().selectedItemProperty().isNull());
+		embossMenuItem.disableProperty().bind(tabPane.getSelectionModel().selectedItemProperty().isNull());
 	}
 
 	private class ConsoleStream extends OutputStream {
@@ -201,6 +205,21 @@ public class MainController {
 			}
 		}
 	}
+    
+    @FXML void emboss() {
+    	Tab t = tabPane.getSelectionModel().getSelectedItem();
+		if (t!=null) {
+			Platform.runLater(()->{
+				PreviewController controller = ((PreviewController)t.getContent());
+				Optional<PEFBook> _book = controller.getBook();
+				if (_book.isPresent()) {
+					PEFBook book = _book.get();
+					EmbossView ev = new EmbossView(book);
+					ev.showAndWait();
+				}
+			});
+		}
+    }
     
     @FXML
     public void closeTab() {

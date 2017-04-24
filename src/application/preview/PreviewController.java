@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.daisy.braille.pef.PEFBook;
 import org.daisy.dotify.api.tasks.AnnotatedFile;
 import org.daisy.dotify.api.tasks.CompiledTaskSystem;
 import org.daisy.dotify.api.tasks.TaskSystem;
@@ -290,6 +291,14 @@ public class PreviewController extends BorderPane {
 			return start.getMainPage().getBookURI();
 		} else {
 			return Optional.<URI>empty();
+		}
+	}
+	
+	public Optional<PEFBook> getBook() {
+		if (start!=null) {
+			return start.getMainPage().getBook();
+		} else {
+			return Optional.<PEFBook>empty();
 		}
 	}
 

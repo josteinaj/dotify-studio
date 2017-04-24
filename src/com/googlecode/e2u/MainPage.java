@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import org.daisy.braille.api.embosser.Embosser;
 import org.daisy.braille.api.embosser.EmbosserWriter;
+import org.daisy.braille.pef.PEFBook;
 import org.daisy.braille.pef.PEFConverterFacade;
 import org.daisy.braille.pef.PEFGenerator;
 import org.daisy.braille.pef.PEFHandler;
@@ -179,6 +180,14 @@ public class MainPage extends BasePage implements AListener {
     		return Optional.of(bookController.getBookURI());
     	} else {
     		return Optional.<URI>empty();
+    	}
+    }
+    
+    public Optional<PEFBook> getBook() {
+    	if (bookController!=null) {
+    		return Optional.of(bookController.getBook());
+    	} else {
+    		return Optional.<PEFBook>empty();
     	}
     }
     
