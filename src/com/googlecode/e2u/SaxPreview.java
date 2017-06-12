@@ -36,7 +36,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import shared.Settings;
 import shared.Settings.Keys;
 
-public class SaxPreview extends DefaultHandler {
+public class SaxPreview {
 	private static final String PEF_NS = "http://www.daisy.org/ns/2008/pef";
 	private static final QName VOLUME = new QName(PEF_NS, "volume");
 	private static final QName SECTION = new QName(PEF_NS, "section");
@@ -94,55 +94,6 @@ public class SaxPreview extends DefaultHandler {
 			Settings.getSettings().getSetPref(Keys.charset, table.getIdentifier());
 		}
 		return table;
-	}
-
-	@Override
-	public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
-		// TODO Auto-generated method stub
-		return super.resolveEntity(publicId, systemId);
-	}
-
-	@Override
-	public void notationDecl(String name, String publicId, String systemId) throws SAXException {
-		// TODO Auto-generated method stub
-		super.notationDecl(name, publicId, systemId);
-	}
-
-	@Override
-	public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName)
-			throws SAXException {
-		// TODO Auto-generated method stub
-		super.unparsedEntityDecl(name, publicId, systemId, notationName);
-	}
-
-	@Override
-	public void setDocumentLocator(Locator locator) {
-		super.setDocumentLocator(locator);
-		this.locator = locator;
-	}
-
-	@Override
-	public void startDocument() throws SAXException {
-		// TODO Auto-generated method stub
-		super.startDocument();
-	}
-
-	@Override
-	public void endDocument() throws SAXException {
-		// TODO Auto-generated method stub
-		super.endDocument();
-	}
-
-	@Override
-	public void startPrefixMapping(String prefix, String uri) throws SAXException {
-		// TODO Auto-generated method stub
-		super.startPrefixMapping(prefix, uri);
-	}
-
-	@Override
-	public void endPrefixMapping(String prefix) throws SAXException {
-		// TODO Auto-generated method stub
-		super.endPrefixMapping(prefix);
 	}
 	
 	public void staxParse() throws MalformedURLException, XMLStreamException, IOException {
@@ -277,28 +228,6 @@ public class SaxPreview extends DefaultHandler {
 		}
 	}
 
-	@Override
-	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-		super.startElement(uri, localName, qName, attributes);
-		try {
-			if ("volume".equals(localName)) {
-				File t1 = File.createTempFile("Preview", ".tmp");
-				t1.deleteOnExit();
-				volumes.add(t1);
-				out = outFactory.createXMLStreamWriter(new OutputStreamWriter(new FileOutputStream(t1), "utf-8"));
-				out.setDefaultNamespace(HTML_NS);
-				writePreamble();
-			} else if ("section".equals(localName)) {
-				writeSectionPreamble();
-			} else if ("page".equals(localName)) {
-				writePagePreamble(1);
-			}
-		} catch (IOException | XMLStreamException e) {
-			throw new SAXException(e);
-		}
-
-	}
-	
 	private void writePreamble() throws XMLStreamException {
 		out.writeDTD("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
 		out.writeCharacters("\n");
@@ -456,67 +385,6 @@ public class SaxPreview extends DefaultHandler {
 		
 		out.writeEndElement();
 		out.writeCharacters("\n");
-	}
-
-	@Override
-	public void endElement(String uri, String localName, String qName) throws SAXException {
-		super.endElement(uri, localName, qName);
-		try {
-			if ("volume".equals(localName)) {
-				System.out.println(volumes.size());
-				writePostamble();
-				out.close();
-				out = null;
-			} else if ("section".equals(localName)) {
-				writeSectionPostamble();
-			} else if ("page".equals(localName)) {
-				writePagePostamble();
-			}
-		} catch (XMLStreamException e) {
-			throw new SAXException(e);
-		}
-	}
-
-	@Override
-	public void characters(char[] ch, int start, int length) throws SAXException {
-		// TODO Auto-generated method stub
-		super.characters(ch, start, length);
-	}
-
-	@Override
-	public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
-		// TODO Auto-generated method stub
-		super.ignorableWhitespace(ch, start, length);
-	}
-
-	@Override
-	public void processingInstruction(String target, String data) throws SAXException {
-		// TODO Auto-generated method stub
-		super.processingInstruction(target, data);
-	}
-
-	@Override
-	public void skippedEntity(String name) throws SAXException {
-		// TODO Auto-generated method stub
-		super.skippedEntity(name);
-	}
-
-	@Override
-	public void warning(SAXParseException e) throws SAXException {
-		// TODO Auto-generated method stub
-		super.warning(e);
-	}
-
-	@Override
-	public void error(SAXParseException e) throws SAXException {
-		// TODO Auto-generated method stub
-		super.error(e);
-	}
-
-	@Override
-	public void fatalError(SAXParseException e) throws SAXException {
-		// TODO Auto-generated method stub
-		super.fatalError(e);
 	}
 	
 	public List<File> getVolumes() {
