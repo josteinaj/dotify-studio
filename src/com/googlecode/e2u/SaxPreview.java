@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +34,8 @@ import com.googlecode.e2u.l10n.Messages;
 import shared.Settings;
 import shared.Settings.Keys;
 
+
+//TODO: row height calculation
 public class SaxPreview {
 	private static final String PEF_NS = "http://www.daisy.org/ns/2008/pef";
 	private static final QName VOLUME = new QName(PEF_NS, "volume");
@@ -42,7 +43,6 @@ public class SaxPreview {
 	private static final QName PAGE = new QName(PEF_NS, "page");
 	private static final QName ROW = new QName(PEF_NS, "row");
 	private static final String HTML_NS = "http://www.w3.org/1999/xhtml";
-	private static final String VOLUME_HEADER = "Volym {0} ({1})";
 	
 	private static final StringParser<Integer> toInt = (value) -> Integer.parseInt(value);
 	private static final StringParser<Boolean> toBoolean = (value) -> Boolean.parseBoolean(value);
@@ -51,6 +51,12 @@ public class SaxPreview {
 	private static interface StringParser<T> {
 		T toObject(String in);
 	}
+	
+	static final StatefulMapper NUMBER_PROCESSOR = StatefulMapper.withTrigger('⠼')
+													.map("⠚⠁⠃⠉⠙⠑⠋⠛⠓⠊", "0123456789")
+													.putIgnorable('⠄')
+													.putIgnorable('⠂')
+													.build();
 	
 	private final List<File> volumes;
 	private final PEFBook book;
@@ -159,7 +165,7 @@ public class SaxPreview {
 		if (pageNumber % 2 == 1) {
 			pageNumber++;
 		}
-		writeSectionPreamble();
+		writeSectionPreamble(sectionNumber);
 		Context props = parseProps(event, inherit);
 		boolean firstPage = true;
 		while (input.hasNext()) {
@@ -216,7 +222,7 @@ public class SaxPreview {
 			if (braille) {
 				s = r.chars;
 			} else {
-				s = cr.replace(r.chars).toString();
+				s = cr.replace(NUMBER_PROCESSOR.replace(r.chars)).toString();
 			}
 			out.writeCharacters(s);
 			int fill = width-s.length();
@@ -377,7 +383,7 @@ public class SaxPreview {
 		out.writeCharacters("\n");
 		out.writeStartElement(HTML_NS, "p");
 		out.writeAttribute("class", "volume-header");
-		out.writeCharacters(MessageFormat.format(VOLUME_HEADER, volumes.size(), book.getSheets(volumes.size())));
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + " " + volumes.size() + " (" + book.getSheets(volumes.size()) + ")");
 		
 		out.writeEndElement();
 		out.writeCharacters("\n");
@@ -568,7 +574,9 @@ public class SaxPreview {
 		}
 		
 		out.writeStartElement(HTML_NS, "p");
-		out.writeCharacters(""); // TODO: range
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_SHOWING_PAGES) + ": " + 
+							book.getFirstPage(volumes.size()) + "-" + book.getLastPage(volumes.size()));
+
 		out.writeEndElement();
 		out.writeCharacters("\n");
 
@@ -630,14 +638,14 @@ public class SaxPreview {
 		out.writeEndDocument();
 	}
 	
-	private void writeSectionPreamble() throws XMLStreamException {
+	private void writeSectionPreamble(int sectionNumber) throws XMLStreamException {
 		out.writeStartElement(HTML_NS, "div");
 		out.writeAttribute("class", "section");
 		//out.writeAttribute("id", "");
 		out.writeCharacters("\n");
 		out.writeStartElement(HTML_NS, "p");
 		out.writeAttribute("class", "section-header");
-		out.writeCharacters(" ");
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_SECTION_LABEL) + " " + sectionNumber);
 		out.writeEndElement();
 		out.writeCharacters("\n");
 	}
@@ -656,7 +664,14 @@ public class SaxPreview {
 		out.writeStartElement(HTML_NS, "p");
 		out.writeAttribute("class", "page-header");
 		out.writeAttribute("id", "pagenum"+pageNumber);
-		out.writeCharacters("Vol 1, Avs " + sectionNumber + " | Sida " + pageNumber); //TODO: variables, localization
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + 
+							" " + volumes.size() + 
+							", " +
+							Messages.getString(L10nKeys.XSLT_SECTION_LABEL) +
+							" " + sectionNumber + 
+							" | " + 
+							Messages.getString(L10nKeys.XSLT_PAGE_LABEL) + 
+							" " + pageNumber);
 		out.writeEndElement();
 		out.writeCharacters("\n");
 		
