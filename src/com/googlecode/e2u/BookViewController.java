@@ -11,7 +11,7 @@ import shared.Settings;
 public class BookViewController {
 	private BookReader bookReader;
 	private AboutBookView aboutBookView;
-	private PreviewController controller;
+	private PreviewController2 controller;
 	private Settings settings;
 	private final MenuSystem menu;
 	
@@ -54,9 +54,9 @@ public class BookViewController {
     	return aboutBookView;
     }
     
-    public PreviewController getPreviewView() {
+    public PreviewController2 getPreviewView() {
     	if (controller==null) {
-    		controller = new PreviewController(bookReader, settings);
+    		controller = new PreviewController2(bookReader, settings);
     	}
     	return controller;
     }
