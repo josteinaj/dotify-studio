@@ -29,7 +29,7 @@ public class PreviewRenderer2 {
 		parser.abort();
 	}
 
-	public File getFile(int v) {
+	public File getFile(int v) throws InterruptedException {
 		if (v<1 || v>parser.getBook().getVolumes()) {
 			throw new IndexOutOfBoundsException();
 		}
@@ -40,9 +40,7 @@ public class PreviewRenderer2 {
 			}
 			return volumes.get(v-1);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw e;
 		}
-		return null;
 	}
 }

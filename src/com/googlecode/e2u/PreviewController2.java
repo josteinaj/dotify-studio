@@ -14,11 +14,9 @@ import shared.Settings;
 import shared.Settings.Keys;
 
 public class PreviewController2 {
-	private static final Logger logger = Logger.getLogger(PreviewController2.class.getCanonicalName());
 	private final BookReader r;
 	private final Settings settings;
 	private PreviewRenderer2 renderer;
-	private boolean saxonNotAvailable;
 	private String brailleFont, textFont, charset;
 	private long lastUpdated;
 
@@ -37,22 +35,17 @@ public class PreviewController2 {
 	}
 	
 	private void update(boolean force) {
-		saxonNotAvailable = false;
 		if (!force && lastUpdated+10000>System.currentTimeMillis()) {
 			return;
 		}
 		lastUpdated = System.currentTimeMillis();
-		try {
-			BookReaderResult brr = r.getResult();
-			if (renderer!=null) {
-				// abort rendering and delete files
-				renderer.abort();
-			}
-			// set up new renderer
-			renderer = new PreviewRenderer2(brr.getBook());
-		} catch (IllegalArgumentException iae) { 
-			saxonNotAvailable = true;
+		BookReaderResult brr = r.getResult();
+		if (renderer!=null) {
+			// abort rendering and delete files
+			renderer.abort();
 		}
+		// set up new renderer
+		renderer = new PreviewRenderer2(brr.getBook());
 	}
 	
 	private boolean settingsChanged() {
@@ -78,9 +71,6 @@ public class PreviewController2 {
 	}
 
 	public Reader getReader(int vol) {
-		if (saxonNotAvailable) {
-			return new StringReader("Failed to read");
-		}
 		try {
 			boolean fileChanged = fileChanged();
 			if (settingsChanged() || fileChanged) {
@@ -88,6 +78,9 @@ public class PreviewController2 {
 			}
 			return new InputStreamReader(new FileInputStream(renderer.getFile(vol)), "UTF-8");
 		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			return new StringReader("Failed to read");
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			return new StringReader("Failed to read");
 		}
 	}
