@@ -1,25 +1,22 @@
 package com.googlecode.e2u;
 
 import java.io.File;
-import java.util.Map;
+import java.util.List;
 
 import org.daisy.braille.pef.PEFBook;
 
 import javafx.concurrent.Task;
 
 public class PreviewRenderer2 {
-	private final PEFBook book;
-	private final Task<Void> t;
-	private final StaxPreview pr;
+	private final StaxPreview parser;
 
 	public PreviewRenderer2(PEFBook book) {
-		this.book = book;
-		this.pr = new StaxPreview(book);
-		this.t = new Task<Void>() {
+		this.parser = new StaxPreview(book);
+		Task<Void> t = new Task<Void>() {
 
 			@Override
 			protected Void call() throws Exception {
-				pr.staxParse();
+				parser.staxParse();
 				return null;
 			}
 		};
@@ -29,18 +26,19 @@ public class PreviewRenderer2 {
 	}
 	
 	public void abort() {
-		pr.abort();
+		parser.abort();
 	}
 
 	public File getFile(int v) {
-		if (v<1 || v>book.getVolumes()) {
+		if (v<1 || v>parser.getBook().getVolumes()) {
 			throw new IndexOutOfBoundsException();
 		}
 		try {
-			while (pr.getSize()<v) {
+			List<File> volumes = parser.getVolumes(); 
+			while (volumes.size()<v) {
 				Thread.sleep(100);
 			}
-			return pr.getVolumes().get(v-1);
+			return volumes.get(v-1);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

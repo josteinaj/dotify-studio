@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -38,6 +39,7 @@ import shared.Settings.Keys;
 
 //TODO: row height calculation
 public class StaxPreview {
+	private static final Logger logger = Logger.getLogger(StaxPreview.class.getCanonicalName());
 	private static final String PEF_NS = "http://www.daisy.org/ns/2008/pef";
 	private static final QName VOLUME = new QName(PEF_NS, "volume");
 	private static final QName SECTION = new QName(PEF_NS, "section");
@@ -68,6 +70,7 @@ public class StaxPreview {
 	private Locator locator;
 	private XMLStreamWriter out;
 	private boolean isProcessing;
+	private boolean used;
 
 	public StaxPreview(PEFBook book) {
 		this.book = book;
@@ -76,6 +79,7 @@ public class StaxPreview {
 		this.pageNumber = 0;
 		this.abort = false;
 		this.isProcessing = false;
+		this.used = false;
 		// Configures a char replacer instead of using braille converter directly in order to preserve 
 		// the previous behavior of xpath function translate, in other words, keeping characters with  
 		// no translation. This is not supported by the braille converter.
@@ -113,7 +117,16 @@ public class StaxPreview {
 		
 	}
 	
+	private synchronized void assertUnused() {
+		if (used) {
+			throw new IllegalStateException("Parsing already requested.");
+		}
+		used = true;
+	}
+	
 	public void staxParse() throws MalformedURLException, XMLStreamException, IOException {
+		assertUnused();
+		long t0 = System.currentTimeMillis();
 		isProcessing = true;
 		try {
 			XMLInputFactory inFactory = XMLInputFactory.newInstance();
@@ -132,13 +145,14 @@ public class StaxPreview {
 			// nothing to do
 		} finally {
 			isProcessing = false;
+			long t1 = System.currentTimeMillis();
+			logger.info("Rendering preview: " + (t1-t0));
 		}
 	}
 	
 	private void parseVolume(XMLEvent event, XMLEventReader input, int volNumber) throws XMLStreamException, IOException, ParsingCancelledException {
 		File t1 = File.createTempFile("Preview", ".tmp");
 		t1.deleteOnExit();
-		volumes.add(t1);
 		OutputStream outStream = new FileOutputStream(t1);
 		try {
 			out = outFactory.createXMLStreamWriter(new OutputStreamWriter(outStream, "utf-8"));
@@ -159,6 +173,7 @@ public class StaxPreview {
 			writePostamble();
 		} finally {
 			outStream.close();
+			volumes.add(t1);
 		}
 	}
 	
@@ -173,7 +188,7 @@ public class StaxPreview {
 			event = input.nextEvent();
 			if (abort) { throw new ParsingCancelledException(); }
 			if (event.isStartElement() && PAGE.equals(event.asStartElement().getName())) {
-				parsePage(event, input, sectionNumber, props, firstPage);
+				parsePage(event, input, volumeNumber, sectionNumber, props, firstPage);
 				firstPage = false;
 			} else if (event.isEndElement() && SECTION.equals(event.asEndElement().getName())) {
 				break;
@@ -190,10 +205,10 @@ public class StaxPreview {
 		return new Context(rows, cols, duplex, rowgap);
 	}
 	
-	private void parsePage(XMLEvent event, XMLEventReader input, int sectionNumber, Context inherit, boolean firstPage) throws XMLStreamException, IOException, ParsingCancelledException {
+	private void parsePage(XMLEvent event, XMLEventReader input, int volNumber, int sectionNumber, Context inherit, boolean firstPage) throws XMLStreamException, IOException, ParsingCancelledException {
 		Context props = parseProps(event, inherit);
 		pageNumber += props.duplex?1:2;
-		writePagePreamble(pageNumber, sectionNumber, firstPage);
+		writePagePreamble(pageNumber, sectionNumber, volNumber, firstPage);
 		ArrayList<Row> rows = new ArrayList<>();
 		while (input.hasNext()) {
 			event = input.nextEvent();
@@ -376,7 +391,7 @@ public class StaxPreview {
 		writeNavigation(volNumber);
 		out.writeEndElement();
 
-		writeAbout();
+		writeAbout(volNumber);
 
 		out.writeStartElement(HTML_NS, "div");
 		out.writeAttribute("class", "volume");
@@ -384,7 +399,7 @@ public class StaxPreview {
 		out.writeCharacters("\n");
 		out.writeStartElement(HTML_NS, "p");
 		out.writeAttribute("class", "volume-header");
-		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + " " + volumes.size() + " (" + book.getSheets(volumes.size()) + " " + Messages.getString(L10nKeys.XSLT_SHEETS_LABEL) + ")");
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + " " + volNumber + " (" + book.getSheets(volNumber) + " " + Messages.getString(L10nKeys.XSLT_SHEETS_LABEL) + ")");
 		
 		out.writeEndElement();
 		out.writeCharacters("\n");
@@ -398,12 +413,6 @@ public class StaxPreview {
 		out.writeCharacters("\n");
 		
 		out.writeStartElement(HTML_NS, "p");
-		//<p><span id="item-emboss"><a href="/">Skriv ut</a></span>
-		//<span><a href="view.html">Förhandsgranska</a></span>
-		//<span><a href="index.html?method=meta">Om boken</a></span>
-		//<input id="connected" type="submit" value="" title="Avsluta"></input>
-		//<input id="notConnected" type="submit" value="" title="Avsluta" disabled="disabled"></input>
-		//</p>
 		out.writeStartElement(HTML_NS, "span");
 		out.writeAttribute("id", "item-emboss");
 		out.writeStartElement(HTML_NS, "a");
@@ -521,7 +530,7 @@ public class StaxPreview {
 		return "sectionId-"+volume+"-"+section;
 	}
 	
-	private void writeAbout() throws XMLStreamException {
+	private void writeAbout(int volNumber) throws XMLStreamException {
 		out.writeStartElement(HTML_NS, "div");
 		out.writeAttribute("id", "about");
 		out.writeCharacters("\n");
@@ -590,7 +599,7 @@ public class StaxPreview {
 		
 		out.writeStartElement(HTML_NS, "p");
 		out.writeCharacters(Messages.getString(L10nKeys.XSLT_SHOWING_PAGES) + ": " + 
-							book.getFirstPage(volumes.size()) + "-" + book.getLastPage(volumes.size()));
+							book.getFirstPage(volNumber) + "-" + book.getLastPage(volNumber));
 
 		out.writeEndElement();
 		out.writeCharacters("\n");
@@ -672,7 +681,7 @@ public class StaxPreview {
 		out.writeCharacters("\n");
 	}
 	
-	private void writePagePreamble(int pageNumber, int sectionNumber, boolean firstPage) throws XMLStreamException {
+	private void writePagePreamble(int pageNumber, int sectionNumber, int volNumber, boolean firstPage) throws XMLStreamException {
 		out.writeStartElement(HTML_NS, "div");
 		//out.writeAttribute("id", "");
 		out.writeAttribute("onmouseover", "setPage("+pageNumber+");");
@@ -682,7 +691,7 @@ public class StaxPreview {
 		out.writeAttribute("class", "page-header");
 		out.writeAttribute("id", "pagenum"+pageNumber);
 		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + 
-							" " + volumes.size() + 
+							" " + volNumber + 
 							", " +
 							Messages.getString(L10nKeys.XSLT_SECTION_LABEL) +
 							" " + sectionNumber + 
@@ -706,12 +715,28 @@ public class StaxPreview {
 		out.writeCharacters("\n");
 	}
 	
+	/**
+	 * Gets the number of parsed volumes (may change if parsing is done on a separate thread).
+	 * @return returns the size
+	 */
 	public int getSize() {
 		return volumes.size();
 	}
 	
+	/**
+	 * Gets the parsed volumes (may change if parsing is done on a separate thread).
+	 * @return the volumes
+	 */
 	public List<File> getVolumes() {
 		return Collections.unmodifiableList(volumes);
+	}
+	
+	/**
+	 * Gets the book on which parsing is done.
+	 * @return returns the book
+	 */
+	public PEFBook getBook() {
+		return book;
 	}
 	
 	/**
