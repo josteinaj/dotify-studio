@@ -36,8 +36,7 @@ import com.googlecode.e2u.l10n.Messages;
 import shared.Settings;
 import shared.Settings.Keys;
 
-
-//TODO: row height calculation
+//TODO: braille/text font
 public class StaxPreview {
 	private static final Logger logger = Logger.getLogger(StaxPreview.class.getCanonicalName());
 	private static final String PEF_NS = "http://www.daisy.org/ns/2008/pef";
@@ -232,8 +231,10 @@ public class StaxPreview {
 			out.writeAttribute("class", "text");
 		}
 		out.writeStartElement(HTML_NS, "table");
+		int totalRowgap = 0;
 		for (Row r : rows) {
-			writeRowPreamble(braille);
+			totalRowgap += r.rowgap+4;
+			writeRowPreamble(braille?"braille":"text", r.rowgap);
 			String s;
 			if (braille) {
 				s = r.chars;
@@ -251,8 +252,9 @@ public class StaxPreview {
 			}
 			writeRowPostamble();
 		}
-		for (int i=0; i<height-rows.size(); i++) {
-			writeRowPreamble(braille);
+		int usedLines = (int)Math.ceil(totalRowgap / 4d);
+		for (int i=0; i<height-usedLines; i++) {
+			writeRowPreamble(braille?"braille":"", 0);
 			out.writeEntityRef("nbsp");
 			writeRowPostamble();			
 		}
@@ -262,16 +264,15 @@ public class StaxPreview {
 		out.writeCharacters("\n");
 	}
 	
-	private void writeRowPreamble(boolean braille) throws XMLStreamException {
+	private void writeRowPreamble(String cl, int rowgap) throws XMLStreamException {
 		out.writeStartElement(HTML_NS, "tr");
 		out.writeCharacters("\n");
 		out.writeStartElement(HTML_NS, "td");
-		if (braille) {
-			out.writeAttribute("class", "braille");
-		} else {
-			out.writeAttribute("class", "text");
+		if (cl!=null && !"".equals(cl)) {
+			out.writeAttribute("class", cl);
 		}
-		out.writeAttribute("style", "height: 26px;"); //TODO: height calculation
+		Double px = (1 + (rowgap / 4d)) * 26;
+		out.writeAttribute("style", "height: " + px.intValue() +"px;");
 	}
 	
 	private void writeRowPostamble() throws XMLStreamException {
