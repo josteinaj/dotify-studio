@@ -150,7 +150,7 @@ public class SaxPreview {
 				if (abort) { throw new ParsingCancelledException(); }
 				if (event.isStartElement() && SECTION.equals(event.asStartElement().getName())) {
 					sectionNumber++;
-					parseSection(event, input, sectionNumber, props);
+					parseSection(event, input, volNumber, sectionNumber, props);
 				} else if (event.isEndElement() && VOLUME.equals(event.asEndElement().getName())) {
 					break;
 				}
@@ -161,11 +161,11 @@ public class SaxPreview {
 		}
 	}
 	
-	private void parseSection(XMLEvent event, XMLEventReader input, int sectionNumber, Context inherit) throws XMLStreamException, IOException, ParsingCancelledException {
+	private void parseSection(XMLEvent event, XMLEventReader input, int volumeNumber, int sectionNumber, Context inherit) throws XMLStreamException, IOException, ParsingCancelledException {
 		if (pageNumber % 2 == 1) {
 			pageNumber++;
 		}
-		writeSectionPreamble(sectionNumber);
+		writeSectionPreamble(volumeNumber, sectionNumber);
 		Context props = parseProps(event, inherit);
 		boolean firstPage = true;
 		while (input.hasNext()) {
@@ -379,11 +379,11 @@ public class SaxPreview {
 
 		out.writeStartElement(HTML_NS, "div");
 		out.writeAttribute("class", "volume");
-		//out.writeAttribute("id", "");
+		out.writeAttribute("id", toSectionId(volNumber, 0));
 		out.writeCharacters("\n");
 		out.writeStartElement(HTML_NS, "p");
 		out.writeAttribute("class", "volume-header");
-		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + " " + volumes.size() + " (" + book.getSheets(volumes.size()) + ")");
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + " " + volumes.size() + " (" + book.getSheets(volumes.size()) + " " + Messages.getString(L10nKeys.XSLT_SHEETS_LABEL) + ")");
 		
 		out.writeEndElement();
 		out.writeCharacters("\n");
@@ -414,14 +414,14 @@ public class SaxPreview {
 		out.writeStartElement(HTML_NS, "span");
 		out.writeStartElement(HTML_NS, "a");
 		out.writeAttribute("href", "view.html");
-		out.writeCharacters("Förhandsgranska");
+		out.writeCharacters(Messages.getString(L10nKeys.PREVIEW_VIEW));
 		out.writeEndElement();
 		out.writeEndElement();
 
 		out.writeStartElement(HTML_NS, "span");
 		out.writeStartElement(HTML_NS, "a");
 		out.writeAttribute("href", "index.html?method=meta");
-		out.writeCharacters("Om boken");
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_ABOUT_LABEL));
 		out.writeEndElement();
 		out.writeEndElement();
 		
@@ -473,16 +473,26 @@ public class SaxPreview {
 		out.writeAttribute("class", "chosen-select");
 		
 		for (int i=1; i<=book.getVolumes(); i++) {
-			//TODO: for each section
 			out.writeCharacters("\n");
 			out.writeStartElement(HTML_NS, "option");
 			out.writeAttribute("value", "view.html?book.xml&volume="+(i));
-			out.writeAttribute("title", ""); //TODO: sheets in section
+			out.writeAttribute("title", "("+book.getSheets(i) + " " + Messages.getString(L10nKeys.XSLT_SHEETS_LABEL) + ")");
 			if (i==volNumber) {
 				out.writeAttribute("selected", "selected");
 			}
 			out.writeCharacters(Messages.getString(L10nKeys.XSLT_VOLUME_LABEL) + " " + i);
 			out.writeEndElement();
+			for (int j=1; j<=book.getSectionsInVolume(i); j++) {
+				out.writeCharacters("\n");
+				out.writeStartElement(HTML_NS, "option");
+				out.writeAttribute("value", "view.html?book.xml&volume="+(i)+"#"+toSectionId(i, j));
+				out.writeAttribute("title", "("+book.getSheets(i, j) + " " + Messages.getString(L10nKeys.XSLT_SHEETS_LABEL) + ")");
+				out.writeEntityRef("nbsp");
+				out.writeEntityRef("nbsp");
+				out.writeEntityRef("nbsp");
+				out.writeCharacters(Messages.getString(L10nKeys.XSLT_SECTION_LABEL) + " " + j);
+				out.writeEndElement();
+			}
 		}
 				
 		out.writeEndElement();
@@ -504,6 +514,10 @@ public class SaxPreview {
 		
 		out.writeEndElement();
 		out.writeCharacters("\n");
+	}
+	
+	private static String toSectionId(int volume, int section) {
+		return "sectionId-"+volume+"-"+section;
 	}
 	
 	private void writeAbout() throws XMLStreamException {
@@ -638,14 +652,16 @@ public class SaxPreview {
 		out.writeEndDocument();
 	}
 	
-	private void writeSectionPreamble(int sectionNumber) throws XMLStreamException {
+	private void writeSectionPreamble(int volumeNumber, int sectionNumber) throws XMLStreamException {
 		out.writeStartElement(HTML_NS, "div");
 		out.writeAttribute("class", "section");
-		//out.writeAttribute("id", "");
+		out.writeAttribute("id", toSectionId(volumeNumber, sectionNumber));
 		out.writeCharacters("\n");
 		out.writeStartElement(HTML_NS, "p");
 		out.writeAttribute("class", "section-header");
-		out.writeCharacters(Messages.getString(L10nKeys.XSLT_SECTION_LABEL) + " " + sectionNumber);
+		out.writeCharacters(Messages.getString(L10nKeys.XSLT_SECTION_LABEL) + " " + sectionNumber 
+				+ " (" + book.getSheets(volumeNumber, sectionNumber) 
+				+ " " + Messages.getString(L10nKeys.XSLT_SHEETS_LABEL) + ")");
 		out.writeEndElement();
 		out.writeCharacters("\n");
 	}
