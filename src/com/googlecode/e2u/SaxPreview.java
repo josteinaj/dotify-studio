@@ -25,6 +25,7 @@ import org.daisy.braille.api.table.Table;
 import org.daisy.braille.consumer.table.TableCatalog;
 import org.daisy.braille.impl.table.DefaultTableProvider;
 import org.daisy.braille.pef.PEFBook;
+import org.daisy.dotify.common.text.ConditionalMapper;
 import org.daisy.dotify.common.text.SimpleUCharReplacer;
 import org.xml.sax.Locator;
 
@@ -52,7 +53,7 @@ public class SaxPreview {
 		T toObject(String in);
 	}
 	
-	static final StatefulMapper NUMBER_PROCESSOR = StatefulMapper.withTrigger('⠼')
+	static final ConditionalMapper NUMBER_PROCESSOR = ConditionalMapper.withTrigger('⠼')
 													.map("⠚⠁⠃⠉⠙⠑⠋⠛⠓⠊", "0123456789")
 													.putIgnorable('⠄')
 													.putIgnorable('⠂')
