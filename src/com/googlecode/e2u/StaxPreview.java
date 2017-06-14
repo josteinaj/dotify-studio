@@ -37,7 +37,7 @@ import shared.Settings.Keys;
 
 
 //TODO: row height calculation
-public class SaxPreview {
+public class StaxPreview {
 	private static final String PEF_NS = "http://www.daisy.org/ns/2008/pef";
 	private static final QName VOLUME = new QName(PEF_NS, "volume");
 	private static final QName SECTION = new QName(PEF_NS, "section");
@@ -69,7 +69,7 @@ public class SaxPreview {
 	private XMLStreamWriter out;
 	private boolean isProcessing;
 
-	public SaxPreview(PEFBook book) {
+	public StaxPreview(PEFBook book) {
 		this.book = book;
 		this.volumes = new ArrayList<>();
 		this.outFactory = XMLOutputFactory.newInstance();

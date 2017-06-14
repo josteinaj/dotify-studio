@@ -10,11 +10,11 @@ import javafx.concurrent.Task;
 public class PreviewRenderer2 {
 	private final PEFBook book;
 	private final Task<Void> t;
-	private final SaxPreview pr;
+	private final StaxPreview pr;
 
 	public PreviewRenderer2(PEFBook book) {
 		this.book = book;
-		this.pr = new SaxPreview(book);
+		this.pr = new StaxPreview(book);
 		this.t = new Task<Void>() {
 
 			@Override
