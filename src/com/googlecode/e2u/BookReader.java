@@ -15,6 +15,7 @@ import org.daisy.braille.pef.PEFBook;
 
 public class BookReader {
 	private static final Logger logger = Logger.getLogger(BookReader.class.getCanonicalName());
+	private final File source;
     private SwingWorker<BookReaderResult, Void> bookReader;
     private BookReaderResult book = null;
     
@@ -55,6 +56,11 @@ public class BookReader {
     }
     
     public BookReader(final String resource) throws URISyntaxException {
+    	this.source = null;
+    	readBook(resource);
+    }
+
+    private void readBook(String resource) {
         bookReader = new SwingWorker<BookReaderResult, Void>() {
         	Date d;
 			@Override
@@ -71,10 +77,15 @@ public class BookReader {
 	       }
        	
         };
-        new NewThreadExecutor().execute(bookReader);
+        new NewThreadExecutor().execute(bookReader);    	
     }
     
     public BookReader(final File f) {
+    	this.source = f;
+    	readBook(f);
+    }
+
+    private void readBook(File f) {
         bookReader = new SwingWorker<BookReaderResult, Void>() {
         	Date d;
 			@Override
@@ -108,6 +119,18 @@ public class BookReader {
 
     public boolean cancel() {
     	return bookReader.cancel(true);
+    }
+    
+    public synchronized void reload() {
+    	if (source==null) {
+    		logger.warning("Reload on internal resource not supported.");
+    		return;
+    	}
+    	book = null;
+    	if (!bookReader.isDone()) {
+    		cancel();
+    	}
+    	readBook(source);
     }
     
     public synchronized BookReaderResult getResult() {

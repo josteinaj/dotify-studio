@@ -74,6 +74,9 @@ public class PreviewController2 {
 		try {
 			boolean fileChanged = fileChanged();
 			if (settingsChanged() || fileChanged) {
+				if (fileChanged) {
+					r.reload();
+				}
 				update(fileChanged);
 			}
 			return new InputStreamReader(new FileInputStream(renderer.getFile(vol)), "UTF-8");

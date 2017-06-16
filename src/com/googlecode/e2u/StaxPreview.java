@@ -419,7 +419,7 @@ public class StaxPreview {
 		out.writeAttribute("id", "item-emboss");
 		out.writeStartElement(HTML_NS, "a");
 		out.writeAttribute("href", "/");
-		out.writeCharacters("Skriv ut");
+		out.writeCharacters(Messages.getString(L10nKeys.EMBOSS_VIEW));
 		out.writeEndElement();
 		out.writeEndElement();
 		
