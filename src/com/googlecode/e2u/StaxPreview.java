@@ -570,22 +570,34 @@ public class StaxPreview {
 		
 		out.writeStartElement(HTML_NS, "p");
 		out.writeStartElement(HTML_NS, "strong");
-		for (String s : orEmpty(book.getTitle())) { //TODO: unknown title
+		// TODO: This isn't very nicely done. When PEFBook returns a list instead, this can be improved
+		boolean hasTitle = false;
+		for (String s : orEmpty(book.getTitle())) {
 			out.writeCharacters(s);
+			hasTitle = true;
 			break;
+		}
+		if (!hasTitle) {
+			out.writeCharacters(Messages.getString(L10nKeys.UNKNOWN_TITLE));
 		}
 		out.writeEndElement();
 		out.writeStartElement(HTML_NS, "br");
 		out.writeEndElement();
 		out.writeStartElement(HTML_NS, "strong");
+		// TODO: This isn't very nicely done. When PEFBook returns a list instead, this can be improved
+		boolean hasAuthor = false;
 		boolean first = true;
 		for (String s : orEmpty(book.getAuthors())) { //TODO: unknown author
 			out.writeCharacters(s);
+			hasAuthor = true;
 			if (first) {
 				first = false;
 			} else {
 				out.writeCharacters("; ");
 			}
+		}
+		if (!hasAuthor) {
+			out.writeCharacters(Messages.getString(L10nKeys.UNKNOWN_AUTHOR));
 		}
 		out.writeEndElement();
 		out.writeCharacters("");

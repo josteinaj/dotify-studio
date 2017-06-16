@@ -48,10 +48,7 @@ public class BookViewController {
     }
     
     public AboutBookView getAboutBookView() {
-    	if (aboutBookView==null) {
-    		aboutBookView = new AboutBookView(bookReader.getResult().getBook(), menu);
-    	}
-    	return aboutBookView;
+    	return new AboutBookView(bookReader.getResult().getBook(), menu);
     }
     
     public PreviewController2 getPreviewView() {

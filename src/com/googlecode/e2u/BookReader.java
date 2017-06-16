@@ -18,6 +18,7 @@ public class BookReader {
 	private final File source;
     private SwingWorker<BookReaderResult, Void> bookReader;
     private BookReaderResult book = null;
+    private org.daisy.braille.api.validator.Validator pv = null;
     
     public static class BookReaderResult {
     	private final PEFBook book;
@@ -82,6 +83,8 @@ public class BookReader {
     
     public BookReader(final File f) {
     	this.source = f;
+		ValidatorFactory factory = ValidatorFactory.newInstance();
+		pv = factory.newValidator("org.daisy.braille.pef.PEFValidator");
     	readBook(f);
     }
 
@@ -91,8 +94,6 @@ public class BookReader {
 			@Override
 			protected BookReaderResult doInBackground() throws Exception {
 				d = new Date();
-				ValidatorFactory factory = ValidatorFactory.newInstance();
-				org.daisy.braille.api.validator.Validator pv = factory.newValidator("org.daisy.braille.pef.PEFValidator");
 				boolean validateOK = false;
 				if (pv != null) {
 					try {
