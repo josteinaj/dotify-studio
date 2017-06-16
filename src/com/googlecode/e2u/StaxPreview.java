@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +30,6 @@ import org.daisy.braille.impl.table.DefaultTableProvider;
 import org.daisy.braille.pef.PEFBook;
 import org.daisy.dotify.common.text.ConditionalMapper;
 import org.daisy.dotify.common.text.SimpleUCharReplacer;
-import org.xml.sax.Locator;
 
 import com.googlecode.e2u.l10n.L10nKeys;
 import com.googlecode.e2u.l10n.Messages;
@@ -36,7 +37,6 @@ import com.googlecode.e2u.l10n.Messages;
 import shared.Settings;
 import shared.Settings.Keys;
 
-//TODO: braille/text font
 public class StaxPreview {
 	private static final Logger logger = Logger.getLogger(StaxPreview.class.getCanonicalName());
 	private static final String PEF_NS = "http://www.daisy.org/ns/2008/pef";
@@ -66,7 +66,6 @@ public class StaxPreview {
 	private final SimpleUCharReplacer cr;
 	private int pageNumber;
 	private boolean abort;
-	private Locator locator;
 	private XMLStreamWriter out;
 	private boolean isProcessing;
 	private boolean used;
@@ -367,6 +366,8 @@ public class StaxPreview {
 		writeCssLink("styles/default/state.css");
 		writeCssLink("chosen/chosen.css");
 		
+		writeCustomStyles();
+		
 		out.writeStartElement(HTML_NS, "script");
 		out.writeAttribute("src", "script/shortcuts.js");
 		out.writeCharacters("");
@@ -624,6 +625,52 @@ public class StaxPreview {
 		out.writeCharacters("");
 		out.writeEndElement();
 		out.writeCharacters("\n");
+	}
+	
+	private void writeCustomStyles() throws XMLStreamException {
+		String odt2braille = "odt2braille";
+		try {
+			String brailleFont = URLDecoder.decode(Settings.getSettings().getString(Keys.brailleFont, ""), MainPage.ENCODING);
+			String textFont = URLDecoder.decode(Settings.getSettings().getString(Keys.textFont, ""), MainPage.ENCODING);
+			if (!"".equals(brailleFont) || !"".equals(textFont)) {
+				out.writeStartElement(HTML_NS, "style");
+				out.writeAttribute("type", "text/css");
+				if (!"".equals(textFont)) {
+					out.writeCharacters("\n.text {\n");
+					out.writeCharacters("font-family: \""+textFont+"\";\n");
+					//This logic is ported from pef2xhtml.xsl, but I am not sure what the purpose is
+					if (textFont.startsWith(odt2braille)&&brailleFont.startsWith(odt2braille)) {
+						out.writeCharacters("letter-spacing: 0px;\n");
+						out.writeCharacters("font-size: 26px;\n");
+					} else if (textFont.startsWith(odt2braille)) {
+						out.writeCharacters("letter-spacing: 1px;\n");
+					} else {
+						out.writeCharacters("font-size: 20px;\n");
+						out.writeCharacters("letter-spacing: 0px;\n");
+					}
+					out.writeCharacters("}\n");
+				}
+				if (!"".equals(brailleFont)) {
+					out.writeCharacters("\n.braille {\n");
+					out.writeCharacters("font-family: \""+brailleFont+"\";\n");
+					//This logic is ported from pef2xhtml.xsl, but I am not sure what the purpose is
+					if (textFont.startsWith(odt2braille)&&brailleFont.startsWith(odt2braille)) {
+						out.writeCharacters("letter-spacing: 0px;\n");
+						out.writeCharacters("font-size: 26px;\n");
+					} else if (brailleFont.startsWith(odt2braille)) {
+						out.writeCharacters("font-size: 26px;\n");
+					} else {
+						out.writeCharacters("font-size: 20px;\n");
+						out.writeCharacters("letter-spacing: 0px;\n");
+					}
+					out.writeCharacters("}\n");
+				}
+				out.writeEndElement();
+				out.writeCharacters("\n");
+			}
+		} catch (UnsupportedEncodingException e) {
+			// should never happen if encoding is UTF-8
+		}
 	}
 	
 	private void writeScripts() throws XMLStreamException {
