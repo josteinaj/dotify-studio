@@ -52,6 +52,18 @@ public enum Messages {
 	 * </ul>
 	 */
 	ERROR_VOLUME_NUMBER_OUT_OF_RANGE("error-volume-number-out-of-range"),
+	/**
+	 * No device specified in preferences.
+	 */
+	ERROR_NO_DEVICE_SPECIFIED("error-no-device-specified"),
+	/**
+	 * The embosser settings are invalid.
+	 */
+	ERROR_INVALID_EMBOSSER_SETTINGS("error-invalid-embosser-settings"),
+	/**
+	 * No alignment specified in preferences.
+	 */
+	ERROR_NO_ALIGNMENT_SPECIFIED("error-no-alignment-specified"),
 	TITLE_SET_SEARCH_FOLDER("title-set-search-folder"),
 	TITLE_IMPORT_SOURCE_DOCUMENT_DIALOG("title-import-source-document-dialog"),
 	TITLE_IMPORT_BRAILLE_OPTIONS_DIALOG("title-import-braille-options-dialog"),
@@ -89,6 +101,10 @@ public enum Messages {
 	MESSAGE_UNKNOWN_TITLE("message-unknown-title"),
 	MESSAGE_PAPER_DETAILS("message-paper-details"),
 	MESSAGE_BOOK_DIMENSIONS("message-book-dimensions"),
+	/**
+	 * The file has been sent to the embosser
+	 */
+	MESSAGE_FILE_SENT_TO_EMBOSSER("message-file-sent-to-embosser"),
 	PREFERENCES_MENU_ITEM("menu-item-preferences"),
 	PREFERENCES_WINDOW_TITLE("preferences-window-title"),
 	TAB_EMBOSS("tab-emboss"),
