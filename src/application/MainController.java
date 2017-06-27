@@ -40,9 +40,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.googlecode.e2u.BookReader;
+
 import application.about.AboutView;
-import application.imports.ImportBrailleView;
 import application.emboss.EmbossView;
+import application.imports.ImportBrailleView;
 import application.l10n.Messages;
 import application.prefs.PreferencesView;
 import application.preview.PreviewController;
@@ -211,11 +213,14 @@ public class MainController {
 		if (t!=null) {
 			Platform.runLater(()->{
 				PreviewController controller = ((PreviewController)t.getContent());
-				Optional<PEFBook> _book = controller.getBook();
-				if (_book.isPresent()) {
-					PEFBook book = _book.get();
+				Optional<BookReader.BookReaderResult> reader = controller.getBookReaderResult();
+				if (reader.isPresent() && reader.get().isValid()) {
+					PEFBook book = reader.get().getBook();
 					EmbossView ev = new EmbossView(book);
 					ev.showAndWait();
+				} else {
+					Alert alert = new Alert(AlertType.ERROR, Messages.ERROR_CANNOT_EMBOSS_INVALID_FILE.localize(), ButtonType.OK);
+		    		alert.showAndWait();
 				}
 			});
 		}

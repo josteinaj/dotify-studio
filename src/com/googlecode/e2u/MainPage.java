@@ -41,6 +41,7 @@ import com.googlecode.ajui.APre;
 import com.googlecode.ajui.Context;
 import com.googlecode.ajui.XHTMLTagger;
 import com.googlecode.ajui.XMLTagger;
+import com.googlecode.e2u.BookReader.BookReaderResult;
 import com.googlecode.e2u.l10n.L10nKeys;
 import com.googlecode.e2u.l10n.Messages;
 
@@ -188,6 +189,14 @@ public class MainPage extends BasePage implements AListener {
     		return Optional.of(bookController.getBook());
     	} else {
     		return Optional.<PEFBook>empty();
+    	}
+    }
+    
+    public Optional<BookReaderResult> getBookReaderResult() {
+    	if (bookController!=null) {
+    		return Optional.ofNullable(bookController.getBookReaderResult());
+    	} else {
+    		return Optional.<BookReaderResult>empty();
     	}
     }
     

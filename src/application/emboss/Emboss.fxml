@@ -21,7 +21,7 @@
          </BorderPane.margin>
          <children>
             <Button fx:id="cancel" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#closeWindow" prefHeight="25.0" prefWidth="78.0" text="%button-cancel" />
-            <Button fx:id="ok" mnemonicParsing="false" onAction="#closeWindow" prefHeight="25.0" prefWidth="78.0" text="%button-emboss" />
+            <Button fx:id="ok" mnemonicParsing="false" onAction="#emboss" prefHeight="25.0" prefWidth="78.0" text="%button-emboss" />
          </children>
       </HBox>
    </bottom>
